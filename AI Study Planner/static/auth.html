@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — AI Smart Study Planner</title>
+  <meta name="description" content="Login or register to AI Smart Study Planner — your personal study management tool." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide SVG Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #7c3aed;
+      --blue-dark:  #5b21b6;
+      --blue-light: #a855f7;
+      --sky:        #8b5cf6;
+      --bg:         #07070e;
+      --bg2:        #0c0c1a;
+      --card:       #100f28;
+      --border:     rgba(124,58,237,0.22);
+      --text:       #f0eeff;
+      --text2:      #9d94c0;
+      --success:    #22c55e;
+      --error:      #ef4444;
+      --font:       'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background blobs */
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%;
+      filter: blur(120px); pointer-events: none; z-index: 0; opacity: 0.35;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #7c3aed, transparent 70%);
+      top: -200px; left: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #8b5cf6, transparent 70%);
+      bottom: -150px; right: -150px;
+    }
+
+    .auth-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+    }
+
+    /* Logo / Brand */
+    .brand { text-align: center; margin-bottom: 2rem; }
+    .brand-logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--blue), var(--sky));
+      border-radius: 14px; color: #fff; margin-bottom: 1rem;
+      box-shadow: 0 8px 32px rgba(124,58,237,0.4);
+    }
+    .brand-logo i { width: 30px; height: 30px; }
+    .brand h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand h1 span { color: #c084fc; }
+    .brand p { font-size: 0.85rem; color: var(--text2); margin-top: 0.35rem; }
+
+    /* Card */
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    /* Tab switcher */
+    .tabs {
+      display: flex; background: rgba(124,58,237,0.06);
+      border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 12px; padding: 4px; margin-bottom: 1.75rem; gap: 4px;
+    }
+    .tab {
+      flex: 1; padding: 0.65rem; text-align: center;
+      border: none; background: transparent; cursor: pointer;
+      font-family: var(--font); font-size: 0.85rem; font-weight: 600;
+      color: var(--text2); border-radius: 9px; transition: all 0.2s ease;
+    }
+    .tab.active {
+      background: rgba(124,58,237,0.25); color: #c084fc;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.15); border: 1px solid rgba(168,85,247,0.2);
+    }
+
+    /* Forms */
+    .form { display: none; flex-direction: column; gap: 1rem; }
+    .form.active { display: flex; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    .form-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; display:flex; align-items:center; gap:0.4rem; }
+    .form-title i { width: 22px; height: 22px; color: var(--blue-light); }
+    .form-subtitle { font-size: 0.83rem; color: var(--text2); margin-bottom: 0.5rem; }
+
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field label { font-size: 0.8rem; font-weight: 600; color: var(--text2); }
+    .field input {
+      padding: 0.75rem 1rem; background: rgba(124,58,237,0.05);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: var(--font); font-size: 0.875rem;
+      outline: none; transition: border-color 0.2s, background 0.2s;
+    }
+    .field input:focus { border-color: var(--blue-light); background: rgba(124,58,237,0.1); }
+    .field input::placeholder { color: #5c5589; }
+
+    .submit-btn {
+      width: 100%; padding: 0.85rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      background: linear-gradient(135deg, var(--blue), var(--sky));
+      color: #fff; border: none; border-radius: 10px; cursor: pointer;
+      font-family: var(--font); font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.02em; transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.4); margin-top: 0.25rem;
+    }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,0.55); }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .submit-btn i { width: 18px; height: 18px; }
+
+    /* Alert box */
+    .alert { padding: 0.7rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 500; display: none; }
+    .alert.show { display: block; }
+    .alert.error   { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert.success { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+
+    /* Password strength */
+    .strength-bar { height: 4px; background: rgba(124,58,237,0.1); border-radius: 99px; overflow: hidden; margin-top: 2px; }
+    .strength-fill { height: 100%; border-radius: 99px; transition: all 0.3s ease; width: 0%; }
+    .strength-label { font-size: 0.72rem; color: var(--text2); margin-top: 0.25rem; }
+
+    /* Benefits strip */
+    .benefits { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+    .benefit-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--text2); }
+    .benefit-item i { width: 15px; height: 15px; color: var(--blue-pale); }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-logo"><i data-lucide="book-open"></i></div>
+      <h1>AI Smart <span>Study Planner</span></h1>
+      <p>Organize your studies. Achieve your goals.</p>
+    </div>
+
+    <!-- Card -->
+    <div class="auth-card">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="alertBox"></div>
+
+      <!-- ── Login Form ── -->
+      <form class="form active" id="loginForm" onsubmit="handleLogin(event)">
+        <div>
+          <div class="form-title"><i data-lucide="log-in"></i> Welcome back</div>
+          <div class="form-subtitle">Sign in to access your study dashboard</div>
+        </div>
+        <div class="field">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="submit-btn" id="loginBtn">
+          Sign In <i data-lucide="arrow-right"></i>
+        </button>
+      </form>
+
+      <!-- ── Register Form ── -->
+      <form class="form" id="registerForm" onsubmit="handleRegister(event)">
+        <div>
+          <div class="form-title"><i data-lucide="user-plus"></i> Create your account</div>
+          <div class="form-subtitle">Start planning your studies today — it's free!</div>
+        </div>
+        <div class="field">
+          <label for="regName">Full Name</label>
+          <input type="text" id="regName" placeholder="e.g. Priya Sharma" required autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="regPassword">Password <span style="color:var(--text2);font-weight:400;font-size:0.7rem">(min. 6 chars)</span></label>
+          <input type="password" id="regPassword" placeholder="Choose a strong password" required autocomplete="new-password" oninput="checkStrength(this.value)" />
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-label" id="strengthLabel"></div>
+        </div>
+        <div class="field">
+          <label for="regConfirm">Confirm Password</label>
+          <input type="password" id="regConfirm" placeholder="Repeat your password" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="submit-btn" id="registerBtn">
+          <i data-lucide="mail"></i> Create Account
+        </button>
+      </form>
+    </div>
+
+    <!-- Benefits -->
+    <div class="benefits">
+      <div class="benefit-item"><i data-lucide="calendar"></i> Monthly Calendar</div>
+      <div class="benefit-item"><i data-lucide="bot"></i> AI Chatbot</div>
+      <div class="benefit-item"><i data-lucide="bell"></i> Smart Reminders</div>
+      <div class="benefit-item"><i data-lucide="bar-chart-3"></i> Progress Tracking</div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // ── Tab switch ──
+    function switchTab(tab) {
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      hideAlert();
+    }
+
+    // ── Alert ──
+    function showAlert(msg, type) {
+      const el = document.getElementById('alertBox');
+      el.textContent = msg;
+      el.className = `alert show ${type}`;
+    }
+    function hideAlert() {
+      document.getElementById('alertBox').className = 'alert';
+    }
+
+    // ── Password strength ──
+    function checkStrength(val) {
+      const fill  = document.getElementById('strengthFill');
+      const label = document.getElementById('strengthLabel');
+      let score = 0;
+      if (val.length >= 6)  score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { pct: '0%',   color: 'transparent', text: '' },
+        { pct: '25%',  color: '#ef4444',     text: 'Weak' },
+        { pct: '50%',  color: '#f59e0b',     text: 'Fair' },
+        { pct: '75%',  color: '#8b5cf6',     text: 'Good' },
+        { pct: '100%', color: '#22c55e',     text: 'Strong' },
+      ];
+      const lvl = levels[Math.min(score, 4)];
+      fill.style.width = val.length ? lvl.pct : '0%';
+      fill.style.background = lvl.color;
+      label.textContent = val.length ? lvl.text : '';
+      label.style.color = lvl.color;
+    }
+
+    // ── Login ──
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideAlert();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> <span>Signing in…</span>';
+
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert('Login successful! Redirecting…', 'success');
+          setTimeout(() => window.location.href = '/', 800);
+        } else {
+          showAlert(data.error || 'Login failed. Please try again.', 'error');
+          btn.disabled = false;
+          btn.innerHTML = 'Sign In <i data-lucide="arrow-right"></i>';
+          lucide.createIcons();
+        }
+      } catch {
+        showAlert('Connection error. Is the server running?', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In <i data-lucide="arrow-right"></i>';
+        lucide.createIcons();
+      }
+    }
+
+    // ── Register ──
+    async function handleRegister(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const name     = document.getElementById('regName').value.trim();
+      const email    = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirm  = document.getElementById('regConfirm').value;
+
+      if (password !== confirm) {
+        showAlert('Passwords do not match.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        showAlert('Password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> <span>Creating account…</span>';
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert(`Account created! Welcoming email sent. Redirecting…`, 'success');
+          setTimeout(() => window.location.href = '/', 1200);
+        } else {
+          showAlert(data.error || 'Registration failed. Please try again.', 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="mail"></i> Create Account';
+          lucide.createIcons();
+        }
+      } catch {
+        showAlert('Connection error. Is the server running?', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="mail"></i> Create Account';
+        lucide.createIcons();
+      }
+    }
+
+    // ── Auto-redirect if already logged in ──
+    (async () => {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (res.ok) window.location.href = '/';
+      } catch {}
+    })();
+  </script>
+</body>
+</html>

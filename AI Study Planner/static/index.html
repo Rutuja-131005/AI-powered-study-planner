@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Smart Study Planner</title>
+  <meta name="description" content="AI-powered study planner with monthly calendar, chatbot, task management, and analytics." />
+  <!-- Auth guard -->
+  <script>
+    (async () => {
+      try {
+        const r = await fetch('/auth/me', { credentials: 'include' });
+        if (!r.ok) window.location.href = '/auth';
+      } catch { window.location.href = '/auth'; }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <!-- Lucide SVG Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+
+  <!-- ════════ TOP INFO BAR ════════ -->
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <div class="top-bar-left">
+        <span class="top-bar-item">
+          <i data-lucide="book-open"></i> AI Smart Study Planner
+        </span>
+        <span class="top-bar-sep">|</span>
+        <span class="top-bar-item">Your Personal Academic Assistant</span>
+      </div>
+      <div class="top-bar-right">
+        <span class="top-bar-item"><i data-lucide="calendar-days"></i> <span id="topBarDate"></span></span>
+        <span class="top-bar-sep">|</span>
+        <span class="top-bar-item"><i data-lucide="clock"></i> <span id="topBarTime"></span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SITE HEADER ════════ -->
+  <header class="site-header" id="siteHeader">
+
+    <!-- Brand -->
+    <div class="header-brand">
+      <div class="brand-logo-box"><i data-lucide="book-open"></i></div>
+      <div class="brand-text">
+        <span class="brand-title">AI Study<span class="brand-accent">Planner</span></span>
+        <span class="brand-tagline">Plan Smart · Study Better</span>
+      </div>
+    </div>
+
+    <!-- Desktop Nav -->
+    <nav class="header-nav" id="desktopNav" aria-label="Main navigation">
+      <button class="nav-btn active" data-section="dashboard" onclick="showSection('dashboard',this)">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
+      </button>
+      <button class="nav-btn" data-section="calendar" onclick="showSection('calendar',this)">
+        <span class="nav-icon"><i data-lucide="calendar"></i></span><span>Calendar</span>
+      </button>
+      <button class="nav-btn" data-section="tasks" onclick="showSection('tasks',this)">
+        <span class="nav-icon"><i data-lucide="check-square"></i></span><span>Tasks</span>
+      </button>
+      <button class="nav-btn" data-section="schedule" onclick="showSection('schedule',this)">
+        <span class="nav-icon"><i data-lucide="calendar-clock"></i></span><span>Schedule</span>
+      </button>
+    </nav>
+
+    <!-- Header Right -->
+    <div class="header-right">
+      <button class="chat-toggle-btn" onclick="toggleChat()" title="AI Assistant">
+        <i data-lucide="bot"></i> <span>Assistant</span>
+      </button>
+      <div class="user-menu">
+        <div class="user-pill">
+          <div class="user-avatar" id="userAvatarInitial">?</div>
+          <span id="userNameDisplay">...</span>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()" title="Sign Out">
+          <i data-lucide="log-out"></i> Sign Out
+        </button>
+      </div>
+      <!-- Hamburger (mobile) -->
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="openMobileNav()" aria-label="Open menu">
+        <i data-lucide="menu"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ════════ MOBILE NAV ════════ -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+  <div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-header">
+      <div class="header-brand">
+        <div class="brand-logo-box"><i data-lucide="book-open"></i></div>
+        <div class="brand-text">
+          <span class="brand-title">AI Study<span class="brand-accent">Planner</span></span>
+        </div>
+      </div>
+      <button class="mobile-nav-close" onclick="closeMobileNav()"><i data-lucide="x"></i></button>
+    </div>
+    <nav class="mobile-nav-links">
+      <button class="nav-btn active" data-section="dashboard" onclick="showSectionMobile('dashboard',this)">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
+      </button>
+      <button class="nav-btn" data-section="calendar" onclick="showSectionMobile('calendar',this)">
+        <span class="nav-icon"><i data-lucide="calendar"></i></span><span>Calendar</span>
+      </button>
+      <button class="nav-btn" data-section="tasks" onclick="showSectionMobile('tasks',this)">
+        <span class="nav-icon"><i data-lucide="check-square"></i></span><span>Tasks</span>
+      </button>
+      <button class="nav-btn" data-section="schedule" onclick="showSectionMobile('schedule',this)">
+        <span class="nav-icon"><i data-lucide="calendar-clock"></i></span><span>Schedule</span>
+      </button>
+    </nav>
+    <div class="mobile-nav-bottom">
+      <button class="chat-toggle-btn" style="width:100%;justify-content:center;" onclick="closeMobileNav();toggleChat()">
+        <i data-lucide="bot"></i> Open AI Assistant
+      </button>
+      <button class="logout-btn" style="width:100%;justify-content:center;" onclick="handleLogout()">
+        <i data-lucide="log-out"></i> Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════ MAIN CONTENT ════════ -->
+  <main class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <section id="dashboard" class="section active">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+          </h1>
+          <p class="section-subtitle" id="dashGreeting">Welcome! Here's your study overview.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddTaskModal()">
+          <i data-lucide="plus"></i> Add Task
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon"><i data-lucide="clipboard-list"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+        </div>
+        <div class="stat-card stat-completed">
+          <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statCompleted">0</div>
+            <div class="stat-label">Completed</div>
+          </div>
+        </div>
+        <div class="stat-card stat-pending">
+          <div class="stat-icon"><i data-lucide="clock"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statPending">0</div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+        <div class="stat-card stat-hours">
+          <div class="stat-icon"><i data-lucide="timer"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statHours">0h</div>
+            <div class="stat-label">Study Hours</div>
+          </div>
+        </div>
+        <div class="stat-card stat-today">
+          <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statTodayTasks">0</div>
+            <div class="stat-label">Today's Tasks</div>
+          </div>
+        </div>
+        <div class="stat-card stat-todaydone">
+          <div class="stat-icon"><i data-lucide="target"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="statTodayDone">0</div>
+            <div class="stat-label">Done Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-card">
+        <div class="progress-header">
+          <span class="progress-title">Overall Task Completion</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Log + Today Tasks -->
+      <div class="dash-bottom-grid">
+        <div class="log-card glass-card">
+          <h3 class="card-title"><i data-lucide="activity"></i> Log Study Session</h3>
+          <div class="log-form">
+            <input type="number" id="logHours" placeholder="Hours studied (e.g. 2.5)" min="0.1" max="24" step="0.5" class="input-field" />
+            <input type="date" id="logDate" class="input-field" />
+            <input type="text" id="logNote" placeholder="Note (optional)" class="input-field" />
+            <button class="btn btn-primary w-full" onclick="logStudyHours()">
+              <i data-lucide="save"></i> Log Hours
+            </button>
+          </div>
+        </div>
+        <div class="today-tasks-card glass-card">
+          <h3 class="card-title"><i data-lucide="list-checks"></i> Today's Tasks</h3>
+          <div id="todayTasksList" class="today-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CALENDAR ── -->
+    <section id="calendar" class="section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i data-lucide="calendar"></i> Monthly Calendar</h1>
+          <p class="section-subtitle">Click any day to view or add tasks</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddTaskModal()">
+          <i data-lucide="plus"></i> Add Task
+        </button>
+      </div>
+      <div class="calendar-container glass-card">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)"><i data-lucide="chevron-left"></i></button>
+          <h2 class="cal-month-title" id="calMonthTitle"></h2>
+          <button class="cal-nav-btn" onclick="changeMonth(1)"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="cal-weekdays">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
+          <div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="day-detail glass-card" id="dayDetail" style="display:none">
+        <div class="day-detail-header">
+          <h3 id="dayDetailTitle"><i data-lucide="calendar-days"></i> <span></span></h3>
+          <button class="btn btn-primary btn-sm" onclick="openAddTaskModalForDate()">
+            <i data-lucide="plus"></i> Add
+          </button>
+        </div>
+        <div id="dayDetailList"></div>
+      </div>
+    </section>
+
+    <!-- ── TASKS ── -->
+    <section id="tasks" class="section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i data-lucide="check-square"></i> All Tasks</h1>
+          <p class="section-subtitle">Manage, complete, and organise your study tasks</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddTaskModal()">
+          <i data-lucide="plus"></i> Add Task
+        </button>
+      </div>
+      <div class="filter-bar glass-card">
+        <div class="filter-group">
+          <i data-lucide="filter" style="width:14px;height:14px;color:var(--text-muted)"></i>
+          <label>Status:</label>
+          <select id="filterStatus" class="select-field" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Priority:</label>
+          <select id="filterPriority" class="select-field" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Date:</label>
+          <input type="date" id="filterDate" class="input-field input-sm" onchange="applyFilters()" />
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">
+          <i data-lucide="x"></i> Clear
+        </button>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </section>
+
+    <!-- ── SCHEDULE ── -->
+    <section id="schedule" class="section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i data-lucide="calendar-clock"></i> Smart Schedule</h1>
+          <p class="section-subtitle">AI-organised study plan sorted by priority &amp; deadline</p>
+        </div>
+        <button class="btn btn-primary" onclick="loadSchedule()">
+          <i data-lucide="refresh-cw"></i> Refresh
+        </button>
+      </div>
+      <div id="scheduleContent" class="schedule-content"></div>
+    </section>
+
+  </main>
+
+  <!-- ════════ FOOTER ════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <!-- Brand -->
+      <div>
+        <div class="footer-logo">
+          <div class="footer-logo-icon"><i data-lucide="book-open"></i></div>
+          <span class="footer-logo-text">AI Study<span>Planner</span></span>
+        </div>
+        <p class="footer-desc">Your intelligent academic companion. Plan smarter, study better, and achieve your learning goals with AI-powered tools.</p>
+        <div class="footer-badges">
+          <span class="footer-badge"><i data-lucide="shield-check"></i> Secure</span>
+          <span class="footer-badge"><i data-lucide="zap"></i> Fast</span>
+          <span class="footer-badge"><i data-lucide="cpu"></i> AI-Powered</span>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div>
+        <h4 class="footer-col-title"><i data-lucide="star"></i> Features</h4>
+        <ul class="footer-links">
+          <li><button class="footer-link-btn" onclick="showSection('dashboard',document.querySelector('[data-section=dashboard]'))"><i data-lucide="layout-dashboard"></i> Dashboard</button></li>
+          <li><button class="footer-link-btn" onclick="showSection('calendar',document.querySelector('[data-section=calendar]'))"><i data-lucide="calendar"></i> Monthly Calendar</button></li>
+          <li><button class="footer-link-btn" onclick="showSection('tasks',document.querySelector('[data-section=tasks]'))"><i data-lucide="check-square"></i> Task Manager</button></li>
+          <li><button class="footer-link-btn" onclick="showSection('schedule',document.querySelector('[data-section=schedule]'))"><i data-lucide="calendar-clock"></i> Smart Scheduler</button></li>
+          <li><button class="footer-link-btn" onclick="toggleChat()"><i data-lucide="bot"></i> AI Chatbot</button></li>
+        </ul>
+      </div>
+
+      <!-- How It Works -->
+      <div>
+        <h4 class="footer-col-title"><i data-lucide="info"></i> How It Works</h4>
+        <ul class="footer-links">
+          <li><span class="footer-text-item"><i data-lucide="circle-dot"></i> Add your study tasks</span></li>
+          <li><span class="footer-text-item"><i data-lucide="circle-dot"></i> Set date, time &amp; priority</span></li>
+          <li><span class="footer-text-item"><i data-lucide="circle-dot"></i> Get AI-generated schedule</span></li>
+          <li><span class="footer-text-item"><i data-lucide="circle-dot"></i> Receive time reminders</span></li>
+          <li><span class="footer-text-item"><i data-lucide="circle-dot"></i> Track your progress</span></li>
+        </ul>
+      </div>
+
+      <!-- Study Tips -->
+      <div>
+        <h4 class="footer-col-title"><i data-lucide="lightbulb"></i> Quick Tips</h4>
+        <ul class="footer-links">
+          <li><span class="footer-text-item"><i data-lucide="brain"></i> Use Pomodoro technique</span></li>
+          <li><span class="footer-text-item"><i data-lucide="book"></i> Practice active recall</span></li>
+          <li><span class="footer-text-item"><i data-lucide="moon"></i> Sleep 7–8 hours daily</span></li>
+          <li><span class="footer-text-item"><i data-lucide="target"></i> Set daily study goals</span></li>
+          <li><span class="footer-text-item"><i data-lucide="droplets"></i> Stay hydrated</span></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Footer Bottom Bar -->
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <span class="footer-copyright">© 2026 AI Smart Study Planner. All rights reserved.</span>
+        <div class="footer-bottom-right">
+          <span>v2.0</span>
+          <span class="footer-sep">·</span>
+          <span>Flask &amp; SQLite</span>
+          <span class="footer-sep">·</span>
+          <span>Logged in as <strong id="footerUserName">—</strong></span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ════════ ADD/EDIT TASK MODAL ════════ -->
+  <div class="modal-overlay" id="taskModal" onclick="closeModalOnOverlay(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h2><i data-lucide="clipboard-edit"></i> <span id="modalTitle">Add New Task</span></h2>
+        <button class="modal-close" onclick="closeTaskModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTaskId" />
+        <div class="form-group">
+          <label>Title <span class="required">*</span></label>
+          <input type="text" id="taskTitle" class="input-field" placeholder="e.g. Study Chapter 5 — Mathematics" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="taskDesc" class="input-field textarea" placeholder="Add notes, topics to cover…"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date <span class="required">*</span></label>
+            <input type="date" id="taskDate" class="input-field" />
+          </div>
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" id="taskTime" class="input-field" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="taskPriority" class="select-field">
+              <option value="low">Low Priority</option>
+              <option value="medium" selected>Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="taskStatus" class="select-field">
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeTaskModal()"><i data-lucide="x"></i> Cancel</button>
+        <button class="btn btn-primary" onclick="saveTask()"><i data-lucide="save"></i> Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ CHATBOT ════════ -->
+  <div class="chat-fab" id="chatFab" onclick="toggleChat()" title="AI Assistant">
+    <span class="fab-icon"><i data-lucide="bot"></i></span>
+  </div>
+
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-avatar"><i data-lucide="bot"></i></div>
+        <div>
+          <div class="chat-name">AI Study Assistant</div>
+          <div class="chat-status">● Online</div>
+        </div>
+      </div>
+      <button class="chat-close-btn" onclick="toggleChat()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">
+        <div class="msg-avatar"><i data-lucide="bot"></i></div>
+        <div class="msg-bubble">
+          <p>Hi! I'm your AI Study Assistant.</p>
+          <p>I can help you with:</p>
+          <ul>
+            <li>Today's study plan</li>
+            <li>Pending tasks</li>
+            <li>Smart schedule</li>
+            <li>Study tips</li>
+          </ul>
+          <p>Type <strong>help</strong> for all commands!</p>
+        </div>
+      </div>
+    </div>
+    <div class="chat-typing" id="chatTyping" style="display:none">
+      <div class="msg-avatar"><i data-lucide="bot"></i></div>
+      <div class="typing-indicator"><span></span><span></span><span></span></div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Ask me anything…" onkeydown="handleChatKey(event)" />
+      <button class="chat-send-btn" onclick="sendChatMessage()" title="Send">
+        <i data-lucide="send"></i>
+      </button>
+    </div>
+    <div class="quick-prompts">
+      <button class="qp-btn" onclick="quickPrompt('What should I study today?')">Today's plan</button>
+      <button class="qp-btn" onclick="quickPrompt('Show my pending tasks')">Pending</button>
+      <button class="qp-btn" onclick="quickPrompt('Show my schedule')">Schedule</button>
+      <button class="qp-btn" onclick="quickPrompt('Give me a study tip')">Study tip</button>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/calendar.js"></script>
+  <script src="/static/js/chatbot.js"></script>
+
+  <script>
+    /* ── Lucide Icons init ── */
+    lucide.createIcons();
+
+    /* ── Top bar live time ── */
+    function updateTopBar() {
+      const now = new Date();
+      const d = document.getElementById('topBarDate');
+      const t = document.getElementById('topBarTime');
+      if (d) d.textContent = now.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+      if (t) t.textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+    updateTopBar(); setInterval(updateTopBar, 1000);
+
+    /* ── Mobile Nav ── */
+    function openMobileNav() {
+      document.getElementById('mobileNav').classList.add('open');
+      document.getElementById('mobileNavOverlay').classList.add('open');
+      document.body.classList.add('nav-open');
+    }
+    function closeMobileNav() {
+      document.getElementById('mobileNav').classList.remove('open');
+      document.getElementById('mobileNavOverlay').classList.remove('open');
+      document.body.classList.remove('nav-open');
+    }
+    function showSectionMobile(id, btn) {
+      showSection(id, btn);
+      // Sync desktop nav active state
+      document.querySelectorAll('.header-nav .nav-btn').forEach(b => b.classList.remove('active'));
+      const desktopBtn = document.querySelector(`.header-nav .nav-btn[data-section="${id}"]`);
+      if (desktopBtn) desktopBtn.classList.add('active');
+      closeMobileNav();
+    }
+  </script>
+</body>
+</html>
